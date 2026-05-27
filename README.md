@@ -1,32 +1,14 @@
-# Seed X-Ray Test Tool
-
-Client-side Fabric mod for an authorized PaperMC anti-xray testing server. The server context for this build explicitly allows X-ray style visualization so testers can evaluate PaperMC anti-xray behavior.
-
-This is not a resource pack and does not manipulate packets, hide itself, bypass authentication, or evade staff. It renders client-side debug overlays only.
-
 ## Target
 
-- Minecraft: `1.21.11`
+- Minecraft: verified jars for `1.21.11` and `1.21.10`
 - Fabric Loader: `0.19.2`
-- Fabric API: `0.141.4+1.21.11`
+- Fabric API: `0.141.4+1.21.11` for development and runtime minimum on the `1.21.11` jar
 - Yarn mappings: `1.21.11+build.5`
 - Java: `21`
 
-This repository contains only the latest `1.21.11` source and jar.
+Versioned build outputs use matching Fabric API/Yarn coordinates per Minecraft version. See `COMPATIBILITY.md` for the verified matrix and 26.x port status.
 
 The active seed is configured in the in-game `F8` quick panel or `.minecraft/config/seed-xray.json`. Once saved, it persists across sessions until you explicitly replace it.
-
-## What It Does
-
-- Uses the configured seed as the authoritative source for prediction.
-- Keeps client-visible block data as diagnostics only.
-- Never removes a predicted ore because the server currently sends stone, deepslate, netherrack, basalt, or another normal block.
-- Renders seed-predicted highlights through walls.
-- Makes all normal client-rendered terrain, including server-sent fake ore states, render through the translucent layer at roughly 4% opacity by default while X-Ray is enabled.
-- Sorts visible predictions by camera distance before applying the render cap, so nearby valid ores are preferred when many ores are in range.
-- Shows a compact HUD with mode, dimension, seed, radius, counts, active filters, and queue sizes.
-- Opens a scrollable non-pausing `F8` quick panel for ore filters, visual settings, seed entry, keybinds, and debug CSV export.
-- Does not register custom networking handlers, plugin channels, or custom payload senders.
 
 ## Prediction Accuracy
 
@@ -48,11 +30,12 @@ The adapter implements the vanilla placed/configured feature core:
 - Uses the client's built-in vanilla `1.21.11` registry data for generator settings and noise parameters, so normal prediction does not depend on multiplayer server-sent ore/block states.
 - A build-time self-test verifies that vanilla seed placement math produces nonzero Overworld, Nether, and ancient debris placement origins.
 - Does not let loaded multiplayer client block states veto predictions, because PaperMC anti-xray may mask or spoof those states.
-- Does not use server-sent ore blocks as prediction source.
 
 This means the overlay is based on vanilla seed feature placement plus local vanilla terrain sampling, not a scan of server-sent ore blocks. Full carver, lava, fluid, structure, and neighboring-origin mutation parity are still the main remaining accuracy limitations; server-sent block states are intentionally diagnostic only.
 
 Prediction depends on the server using vanilla-compatible world generation for Minecraft `1.21.11`. Datapacks, custom ore rates, custom terrain generation, or plugins that modify generation can make predictions wrong.
+
+The `1.21.10` jar uses a compatibility render adapter, but the worldgen adapter is still tuned against the `1.21.11` vanilla feature set. Use local-world spot checks before treating older-version predictions as a source of truth.
 
 ## PaperMC Anti-Xray Diagnostics
 
@@ -157,13 +140,24 @@ Run a dev client:
 
 The included wrapper script downloads Gradle `9.5.0` if no system Gradle is installed.
 
-The checked-in release jar is:
+Build all verified versioned jars:
+
+```powershell
+.\tools\build-version-jars.ps1
+```
+
+The script backs up any installed `seed-xray-*.jar` files into `jar-backups/`, then writes version-specific jars to `dist/`:
 
 - `dist/seed-xray-0.1.12+mc1.21.11.jar`
+- `dist/seed-xray-0.1.12+mc1.21.10.jar`
+
+As of the latest Fabric porting check for this project, `26.1.x` requires migrating away from Yarn to Mojang's official/unobfuscated mappings and Java 25.
 
 ## Installation
 
-Build the jar, then place the remapped jar from `build/libs/` into the client `.minecraft/mods` directory with Fabric Loader and Fabric API installed. The repository also includes the latest built jar in `dist/`.
+Build the jar, then place the remapped jar from `build/libs/` into the client `.minecraft/mods` directory with Fabric Loader and Fabric API installed.
+
+Use the jar matching the Minecraft version. Keep older jars in `jar-backups/` before replacing anything in `.minecraft/mods`.
 
 ## Renderer Compatibility
 
