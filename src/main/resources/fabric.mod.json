@@ -1,0 +1,26 @@
+{
+  "schemaVersion": 1,
+  "id": "seed-xray",
+  "version": "${version}",
+  "name": "Seed X-Ray Test Tool",
+  "description": "Client-side seed-based ore prediction and PaperMC anti-xray diagnostic visualization for authorized test servers.",
+  "authors": [
+    "Codex"
+  ],
+  "contact": {},
+  "license": "MIT",
+  "environment": "client",
+  "entrypoints": {
+    "client": [
+      "com.seedxray.client.XrayClientMod"
+    ]
+  },
+  "mixins": [
+    "seed-xray.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.19.2",
+    "minecraft": "${minecraft_version}",
+    "fabric-api": ">=${fabric_api_min}"
+  }
+}

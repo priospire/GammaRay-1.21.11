@@ -1,0 +1,15 @@
+{
+  "required": false,
+  "minVersion": "0.8",
+  "package": "com.seedxray.client.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "client": [
+    "BlockRenderLayersMixin",
+    "BlockModelRendererMixin",
+    "SodiumBlockRendererMixin",
+    "KeyBindingAccessor"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

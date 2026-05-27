@@ -1,0 +1,117 @@
+plugins {
+    id "fabric-loom" version "${loom_version}"
+}
+
+version = project.mod_version
+group = project.maven_group
+
+base {
+    archivesName = project.archives_base_name
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(21)
+    }
+    withSourcesJar()
+}
+
+dependencies {
+    minecraft "com.mojang:minecraft:${minecraft_version}"
+    mappings "net.fabricmc:yarn:${yarn_mappings}:v2"
+    modImplementation "net.fabricmc:fabric-loader:${loader_version}"
+    modImplementation "net.fabricmc.fabric-api:fabric-api:${fabric_version}"
+}
+
+processResources {
+    inputs.property "version", project.version
+    inputs.property "minecraft_version", project.minecraft_version
+    inputs.property "fabric_api_min", project.fabric_version.toString().split("\\+")[0]
+
+    filesMatching("fabric.mod.json") {
+        expand(
+                "version": project.version,
+                "minecraft_version": project.minecraft_version,
+                "fabric_api_min": project.fabric_version.toString().split("\\+")[0]
+        )
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    it.options.release = 21
+}
+
+tasks.withType(Test).configureEach {
+    failOnNoDiscoveredTests = false
+}
+
+tasks.register("verifySeedXrayQa") {
+    group = "verification"
+    description = "Runs Seed X-Ray static QA checks for local UI text/key names, configured-seed handling, and custom networking."
+
+    doLast {
+        def javaFiles = fileTree("src/main/java") {
+            include "**/*.java"
+        }.files
+        def docAndSourceFiles = javaFiles + files("README.md").files
+
+        def uiForbidden = [
+                "Text" + ".translatable",
+                "getBoundKeyLocalizedText" + "(",
+                "getBoundKeyTranslationKey" + "("
+        ]
+        def networkingForbidden = [
+                "ClientPlay" + "Networking",
+                "ServerPlay" + "Networking",
+                "Custom" + "Payload",
+                "Packet" + "ByteBuf",
+                "registerGlobal" + "Receiver",
+                "register" + "Receiver",
+                ".send" + "("
+        ]
+        def seedForbidden = [
+                "SERVER_WORLD_" + "SEED",
+                "hard-" + "coded seed",
+                "hardcoded" + " seed"
+        ]
+
+        def failures = []
+        javaFiles.each { source ->
+            def text = source.getText("UTF-8")
+            uiForbidden.each { token ->
+                if (text.contains(token)) {
+                    failures << "${source}: forbidden UI token '${token}'"
+                }
+            }
+            networkingForbidden.each { token ->
+                if (text.contains(token)) {
+                    failures << "${source}: forbidden networking token '${token}'"
+                }
+            }
+        }
+        docAndSourceFiles.each { source ->
+            def text = source.getText("UTF-8")
+            seedForbidden.each { token ->
+                if (text.toLowerCase(java.util.Locale.ROOT).contains(token.toLowerCase(java.util.Locale.ROOT))) {
+                    failures << "${source}: forbidden seed-default token '${token}'"
+                }
+            }
+        }
+        if (!failures.isEmpty()) {
+            throw new GradleException("Seed X-Ray QA check failed:\n" + failures.join("\n"))
+        }
+    }
+}
+
+tasks.register("verifySeedPredictionSelfTest", JavaExec) {
+    group = "verification"
+    description = "Runs a headless seed prediction self-test for Overworld, Nether, and ancient debris candidates."
+    dependsOn tasks.named("testClasses")
+    classpath = sourceSets.test.runtimeClasspath
+    mainClass = "com.seedxray.client.prediction.SeedPredictionSelfTest"
+}
+
+tasks.named("check") {
+    dependsOn tasks.named("verifySeedXrayQa")
+    dependsOn tasks.named("verifySeedPredictionSelfTest")
+}

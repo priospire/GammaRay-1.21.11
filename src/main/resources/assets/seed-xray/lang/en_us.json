@@ -1,0 +1,13 @@
+{
+  "category.seed-xray.controls": "Seed X-Ray",
+  "key.seed-xray.toggle_xray": "Toggle X-Ray",
+  "key.seed-xray.cycle_mode": "Cycle Mode",
+  "key.seed-xray.cycle_ore_group": "Cycle Ore Filter",
+  "key.seed-xray.toggle_labels": "Toggle Labels",
+  "key.seed-xray.toggle_diagnostic_hud": "Toggle Diagnostic HUD",
+  "key.seed-xray.increase_radius": "Increase Prediction Radius",
+  "key.seed-xray.decrease_radius": "Decrease Prediction Radius",
+  "key.seed-xray.clear_cache": "Clear Prediction Cache",
+  "key.seed-xray.toggle_dimming": "Toggle Transparency Mode",
+  "key.seed-xray.open_settings": "Open Settings"
+}
